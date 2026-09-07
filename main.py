@@ -8278,23 +8278,34 @@ class TempVoice(commands.Cog):
     # -------------------------------------------------- panneau
 
     def panel_embed(self, owner: discord.Member) -> discord.Embed:
-        e = h.base_embed(
-            " Panneau de contrôle",
-            (
-                f"Salon de {owner.mention}. Tu es le seul à pouvoir utiliser ces "
-                f"boutons (le staff aussi).\n\n"
-                f"**Renommer** — change le nom du salon\n"
-                f" **Limite** — nombre maximum de membres\n"
-                f" **Verrouiller** — empêche les nouvelles arrivées\n"
-                f" **Masquer** — rend le salon invisible\n"
-                f" **Expulser** — vire quelqu'un du salon\n"
-                f"**Autoriser** — laisse entrer quelqu'un malgré le verrou\n"
-                f" **Transférer** — donne le salon à un autre\n"
-                f" **Réclamer** — si le propriétaire est parti\n\n"
-                f"*Le salon se supprime tout seul quand il se vide.*"
+        e = h.base_embed(description=f"Salon de {owner.mention}")
+        e.add_field(
+            name="Accès",
+            value=(
+                "`Verrouiller` — bloquer les arrivées\n"
+                "`Masquer` — rendre le salon invisible\n"
+                "`Autoriser @membre` — laisser entrer malgré le verrou\n"
+                "`Expulser @membre` — déconnecter du salon"
             ),
+            inline=False,
         )
-        e.set_thumbnail(url=owner.display_avatar.url)
+        e.add_field(
+            name="Salon",
+            value=(
+                "`Renommer <nom>` — changer le nom\n"
+                "`Limite <n>` — limiter les places"
+            ),
+            inline=False,
+        )
+        e.add_field(
+            name="Propriété",
+            value=(
+                "`Transférer @membre` — céder le salon\n"
+                "`Réclamer` — reprendre un salon sans propriétaire"
+            ),
+            inline=False,
+        )
+        e.set_footer(text="Propriétaire et staff uniquement · supprimé quand il se vide")
         return e
 
     # -------------------------------------------------- événement principal
