@@ -648,7 +648,8 @@ CREATE TABLE IF NOT EXISTS selfrole_panel (
     title       TEXT,
     description TEXT,
     placeholder TEXT,
-    multiple    INTEGER DEFAULT 0
+    multiple    INTEGER DEFAULT 0,
+    ping_new    INTEGER DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_cases_user ON cases(guild_id, user_id);
@@ -684,6 +685,9 @@ class Database:
             "welcome": {
                 "welcome_image": "TEXT",
                 "goodbye_image": "TEXT",
+            },
+            "selfrole_panel": {
+                "ping_new": "INTEGER DEFAULT 0",
             },
         }
         for table, columns in wanted.items():
@@ -7799,165 +7803,163 @@ class Tools(commands.Cog):
 B = config.PREFIX
 E = config.ELEVATED_PREFIX
 
-FICHES = {
-    "Modération": ("", B, [
-        (f"{B}ban <@user|ID> [durée] [raison]", "Bannit un membre"),
-        (f"{B}tempban <@user> <durée> <raison>", "Ban temporaire auto"),
-        (f"{B}kick <@user> [raison]", "Expulse un membre"),
-        (f"{B}softban <@user> [raison]", "Ban + unban (purge messages)"),
-        (f"{B}tempmute <@user|ID> [durée]", "Rend un membre muet"),
-        (f"{B}unmute <@user|ID>", "Retire le mute"),
-        (f"{B}unmuteall", "Retire les mutes de tout le monde"),
-        (f"{B}warn <@user|ID> <raison>", "Ajoute un avertissement"),
-        (f"{B}clear <nombre|all>", "Supprime des messages"),
-        (f"{B}lock / {B}unlock", "Bloque / rouvre le salon"),
-        (f"{B}slowmode <temps>", "Active le mode lent"),
-        (f"{B}jail <@user> [durée]", "Emprisonne un membre"),
-    ]),
-    "Surveillance & Infos": ("", B, [
-        (f"{B}history <@user|ID>", "Dossier du membre (casier)"),
-        (f"{B}user <@user|ID>", "Infos détaillées"),
-        (f"{B}pic <@user|ID>", "Photo de profil (pp)"),
-        (f"{B}banner", "Bannière du serveur"),
-        (f"{B}snipe", "Dernier message supprimé"),
-        (f"{B}editsnipe", "Dernière modification"),
-        (f"{B}modstats [@user]", "Classement des modérateurs"),
-        (f"{B}absence [raison]", "Déclarer une absence"),
-        (f"{B}member", "Statistiques du serveur"),
-        (f"{B}vc", "Statistiques vocales"),
-        (f"{B}notes <@user>", "Notes internes sur un membre"),
-    ]),
-    "Sanctions & Logs": ("", E, [
-        (f"{E}sanction <@user|ID>", "Historique des sanctions"),
-        (f"{E}mutelist", "Liste des membres mute/bannis"),
-        (f"{E}delsanction <ID>", "Supprime une sanction"),
-        (f"{E}delallsanction <@user>", "Efface tout l'historique"),
-        (f"{E}note <@user> <texte>", "Ajoute une note interne"),
-        (f"{E}delnote <ID>", "Supprime une note"),
-        (f"{E}auditlog [n]", "Journal d'audit du serveur"),
-        (f"{E}clearwarns <@user>", "Efface les dossiers d'un membre"),
-    ]),
-    "Blacklist / Hardban (Owner)": ("", E, [
-        (f"{E}bl <@user|ID> [raison]", "Ban anti-retour + anti-alt"),
-        (f"{E}unbl <ID>", "Lève le ban"),
-        (f"{E}bls", "Liste des bannis"),
-        (f"{E}hbconfig", "Réglages anti-alt"),
-        (f"{E}botbl <@user>", "Bloque juste l'usage du bot (léger)"),
-        (f"{E}whitelist add <@role>", "Rôle exempté de l'automod"),
-    ]),
-    "Rôles & Salons (Owner)": ("", E, [
-        (f"{E}createrole <nom> [#couleur]", "Crée un rôle"),
-        (f"{E}deleterole <@role>", "Supprime un rôle"),
-        (f"{E}rolecolor <@role> <#hex>", "Change la couleur d'un rôle"),
-        (f"{E}rolename <@role> <nom>", "Renomme un rôle"),
-        (f"{E}roleall <@role>", "Donne un rôle à tout le monde"),
-        (f"{E}temprole <@user> <@role> <durée>", "Rôle temporaire"),
-        (f"{E}createchannel <nom>", "Crée un salon"),
-        (f"{E}deletechannel [salon]", "Supprime un salon"),
-        (f"{E}hidechannel / {E}showchannel", "Masque / réaffiche un salon"),
-        (f"{E}nuke", "Recrée le salon (efface tout)"),
-        (f'{E}addrolecS "nom" [emoji]', "Ajoute un rôle au menu de choix"),
-        (f"{E}rolepanel [#salon]", "Publie le menu « choisis ton rôle »"),
-    ]),
-    "Vocal": ("", B, [
-        (f"{B}vckick <@user>", "Déconnecte du vocal"),
-        (f"{B}vcmove <@user> <salon>", "Déplace en vocal"),
-        (f"{B}summon <@user>", "Amène un membre dans ton salon"),
-        (f"{B}followme <@role>", "Rassemble un rôle chez toi"),
-        (f"{B}vclock / {B}vcunlock", "Verrouille un salon vocal"),
-        (f"{B}muteall / {B}unmuteall", "Coupe le micro de tout le vocal"),
-        (f"{B}voice setup", "Salons « créer votre salon »"),
-    ]),
-    "Tickets & Bienvenue": ("", E, [
-        (f"{E}ticket panel", "Publie le panneau de tickets"),
-        (f"{E}ticket staff <@role>", "Rôle du staff des tickets"),
-        (f"{E}welcome channel <#salon>", "Salon de bienvenue"),
-        (f"{E}welcome autorole <@role>", "Rôle automatique à l'arrivée"),
-        (f"{E}goodbye channel <#salon>", "Salon des départs"),
-    ]),
-    "Sécurité (Owner)": ("", E, [
-        (f"{E}antiraid on / off", "Active la protection anti-raid"),
-        (f"{E}antiraid set <clé> <valeur>", "Règle les seuils"),
-        (f"{E}antiraid panic [min]", "Verrouillage d'urgence"),
-        (f"{E}hardban <@user|ID> [raison]", "Ban anti-retour + anti-alt"),
-        (f"{E}unhardban <ID>", "Lève un hardban"),
-        (f"{E}hardbans", "Liste des hardbans"),
-        (f"{E}massban <ID...> [raison]", "Bannit plusieurs IDs"),
-        (f"{E}lockdown on / off", "Verrouille tout le serveur"),
-        (f"{E}verifylevel <niveau>", "Niveau de vérification"),
-    ]),
-    "Outils & Fun": ("", B, [
-        (f"{B}tag <nom>", "Réponses personnalisées"),
-        (f"{B}giveaway start <durée> <n> <lot>", "Lance un concours"),
-        (f"{B}sticky set <texte>", "Message toujours épinglé"),
-        (f"{B}remind <durée> <note>", "Rappel personnel"),
-        (f"{B}calc <expression>", "Calculatrice"),
-        (f"{B}poll <question>", "Sondage"),
-        (f"{B}8ball <question>", "Boule magique"),
-        (f"{B}claim <@user> [label]", "Pseudo consensuel (avec accord)"),
-    ]),
+PANEL_TITRES = {
+    "Moderation": "Modération",
+    "AntiRaid": "Anti-raid / Automod",
+    "Tickets": "Tickets",
+    "Welcome": "Bienvenue & Départs",
+    "Stats": "Stats & Profils",
+    "Fun": "Fun",
+    "OpMod": "Modération avancée",
+    "Tools": "Outils",
+    "VoiceStats": "Vocal & stats vocales",
+    "Extras": "Rôles, salons, émojis, notes",
+    "HardBan": "Hardban",
+    "Rules": "Règlement",
+    "StatsChannels": "Salons compteurs",
+    "Logging": "Logs",
+    "MediaOnly": "Salons photo",
+    "TempVoice": "Vocaux temporaires & PV",
+    "SelfRoles": "Menus de rôles",
+    "Panel": "Panneau",
+    "Utility": "Aide & utilitaires",
 }
 
 
+def panel_command_lines(cog) -> list[str]:
+    """Une ligne par commande (sous-commandes comprises), triées."""
+    lignes = []
+    for c in sorted(cog.walk_commands(), key=lambda x: x.qualified_name):
+        if c.hidden:
+            continue
+        doc = (c.short_doc or "").strip()
+        # Retire l'usage repris au début du help ("+cmd ... — desc")
+        if doc.startswith((config.PREFIX, config.ELEVATED_PREFIX)):
+            for sep in (" — ", " - "):
+                if sep in doc:
+                    doc = doc.split(sep, 1)[1]
+                    break
+        alias = f" ({', '.join(c.aliases[:2])})" if c.aliases else ""
+        ligne = f"`{config.PREFIX}{c.qualified_name}`{alias}"
+        if doc:
+            ligne += f" — {doc[:80]}"
+        lignes.append(ligne)
+    return lignes
+
+
+def panel_category_embeds(bot, cog_name) -> list[discord.Embed]:
+    """Toutes les commandes d'une catégorie, découpées si trop longues."""
+    cog = bot.get_cog(cog_name)
+    if cog is None:
+        return [h.err_embed("Catégorie introuvable.")]
+    titre = PANEL_TITRES.get(cog_name, cog_name)
+    lignes = panel_command_lines(cog)
+    embeds, bloc = [], ""
+    for ligne in lignes:
+        if len(bloc) + len(ligne) + 1 > 3900:
+            embeds.append(h.base_embed(titre, bloc))
+            bloc = ""
+        bloc += ligne + "\n"
+    if bloc:
+        embeds.append(h.base_embed(titre, bloc))
+    for i, e in enumerate(embeds):
+        suffixe = f" ({i + 1}/{len(embeds)})" if len(embeds) > 1 else ""
+        e.title = f"{titre}{suffixe} · {len(lignes)} commandes"
+        e.set_footer(text=f"{config.PREFIX}help <commande> pour les détails")
+    return embeds or [h.base_embed(titre, "Aucune commande.")]
+
+
 class PanelSelect(discord.ui.Select):
-    def __init__(self):
-        options = [
-            discord.SelectOption(label=titre,
-                                 description=f"Préfixe {data[1]}", value=titre)
-            for titre, data in FICHES.items()
-        ]
+    """Menu déroulant construit dynamiquement depuis les cogs chargés."""
+
+    def __init__(self, bot=None):
+        options = [discord.SelectOption(label="Vue d'ensemble", value="__home__")]
+        if bot is not None:
+            for name, cog in bot.cogs.items():
+                cmds = [c for c in cog.walk_commands() if not c.hidden]
+                if not cmds:
+                    continue
+                options.append(discord.SelectOption(
+                    label=PANEL_TITRES.get(name, name)[:100],
+                    description=f"{len(cmds)} commandes",
+                    value=name,
+                ))
         super().__init__(placeholder="Choisis une catégorie...",
-                         options=options, custom_id="panel:select")
+                         options=options[:25], custom_id="panel:select")
 
     async def callback(self, interaction: discord.Interaction):
-        titre = self.values[0]
-        emoji, prefixe, lignes = FICHES[titre]
-        corps = "\n".join(f"`{usage}` — {desc}" for usage, desc in lignes)
-        e = h.base_embed(f"{emoji} {titre}", corps)
-        e.set_footer(
-            text=f"{prefixe}help <commande> pour plus de détails · "
-                 f"préfixe : {prefixe}"
+        bot = interaction.client
+        choix = self.values[0]
+        if choix == "__home__":
+            return await interaction.response.send_message(
+                embed=panel_overview_embed(bot, interaction.guild), ephemeral=True
+            )
+        await interaction.response.send_message(
+            embeds=panel_category_embeds(bot, choix)[:10], ephemeral=True
         )
-        await interaction.response.send_message(embed=e, ephemeral=True)
 
 
 class PanelView(discord.ui.View):
     def __init__(self, bot=None):
         super().__init__(timeout=None)
         self.bot = bot
-        self.add_item(PanelSelect())
+        self.add_item(PanelSelect(bot))
+
+
+def panel_overview_embed(bot, guild) -> discord.Embed:
+    total = len([c for c in bot.walk_commands() if not c.hidden])
+    cats = [(PANEL_TITRES.get(n, n), len([c for c in cog.walk_commands() if not c.hidden]))
+            for n, cog in bot.cogs.items()
+            if any(not c.hidden for c in cog.walk_commands())]
+    e = h.base_embed(
+        "Panneau de commandes",
+        (
+            f"**{total}** commandes en **{len(cats)}** catégories.\n\n"
+            f"Préfixes : `{config.PREFIX}` (base) et `{config.ELEVATED_PREFIX}` "
+            f"(rang supérieur) — les deux fonctionnent partout.\n\n"
+            f"Choisis une catégorie dans le menu pour voir toutes ses commandes."
+        ),
+    )
+    for titre, n in cats:
+        e.add_field(name=titre, value=f"{n} cmd", inline=True)
+    if guild and guild.icon:
+        e.set_thumbnail(url=guild.icon.url)
+    return e
 
 
 class Panel(commands.Cog):
-    """Panneau de commandes thématique."""
+    """Panneau listant toutes les commandes du bot."""
 
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name="panel", aliases=["panneau", "menu", "commandes", "cmds"],
-                      help="Affiche le panneau de commandes.")
+                      help="+panel [catégorie|all] — liste toutes les commandes du bot.")
     @commands.guild_only()
-    async def panel(self, ctx):
-        total = len([c for c in self.bot.walk_commands() if not c.hidden])
-        e = h.base_embed(
-            "Panneau de commandes",
-            (
-                f"**{total}+** commandes en **{len(FICHES)}** catégories.\n\n"
-                f"**Deux préfixes actifs :**\n"
-                f"`{B}` — commandes de base (clear, ping, profil...)\n"
-                f"`{E}` — commandes de rang supérieur (blacklist, sanctions...)\n\n"
-                f"*Les deux fonctionnent partout ; le préfixe indiqué est la "
-                f"convention.*\n\n"
-                f"Choisis une catégorie ci-dessous."
-            ),
-        )
-        for titre, (emoji, prefixe, lignes) in FICHES.items():
-            e.add_field(name=f"{emoji} {titre}",
-                        value=f"`{prefixe}` · {len(lignes)} cmd", inline=True)
-        if ctx.guild.icon:
-            e.set_thumbnail(url=ctx.guild.icon.url)
-        e.set_footer(text=ctx.guild.name)
-        await ctx.send(embed=e, view=PanelView(self.bot))
+    async def panel(self, ctx, *, categorie: str = None):
+        # +panel all : déroule TOUT dans le salon, catégorie par catégorie.
+        if categorie and categorie.lower() in ("all", "tout", "toutes"):
+            for name in self.bot.cogs:
+                cog = self.bot.get_cog(name)
+                if not any(not c.hidden for c in cog.walk_commands()):
+                    continue
+                for e in panel_category_embeds(self.bot, name):
+                    await ctx.send(embed=e)
+            return
+        # +panel <catégorie> : une catégorie directement.
+        if categorie:
+            for name in self.bot.cogs:
+                if categorie.lower() in (name.lower(),
+                                         PANEL_TITRES.get(name, "").lower()):
+                    for e in panel_category_embeds(self.bot, name):
+                        await ctx.send(embed=e)
+                    return
+            return await ctx.reply(embed=h.err_embed(
+                f"Catégorie inconnue. Lance `{ctx.prefix}panel` pour voir la liste."
+            ))
+        # +panel : vue d'ensemble + menu déroulant (persistant).
+        await ctx.send(embed=panel_overview_embed(self.bot, ctx.guild),
+                       view=PanelView(self.bot))
 
 
 # ==============================================================================
@@ -9436,6 +9438,86 @@ class SelfRoles(commands.Cog):
         await self.bot.db.set_selfrole_panel(ctx.guild.id, "message_id", message.id)
         if salon != ctx.channel:
             await ctx.reply(embed=h.ok_embed(f"Menu publié dans {salon.mention}."))
+
+    # ------------------------------------------------------------ rlpanel
+    # Panneau de rôles + ping automatique des nouveaux membres.
+
+    @commands.command(
+        name="rlpanel",
+        aliases=["rolesping", "pingroles"],
+        help="+rlpanel [#salon|off] — publie le menu de rôles et ping chaque "
+             "nouveau membre dans ce salon pour qu'il choisisse.",
+    )
+    @commands.guild_only()
+    @h.is_owner_or(manage_roles=True)
+    @commands.bot_has_permissions(manage_roles=True)
+    async def rlpanel(self, ctx, salon: str = None):
+        # +rlpanel off : coupe le ping des nouveaux (le menu reste en place).
+        if salon and salon.lower() in ("off", "stop", "disable"):
+            await self.bot.db.set_selfrole_panel(ctx.guild.id, "ping_new", 0)
+            return await ctx.reply(
+                embed=h.ok_embed("Ping des nouveaux membres désactivé.")
+            )
+
+        cible = ctx.channel
+        if salon:
+            try:
+                cible = await commands.TextChannelConverter().convert(ctx, salon)
+            except commands.BadArgument:
+                return await ctx.reply(embed=h.err_embed("Salon introuvable."))
+
+        rows = await self.bot.db.selfroles(ctx.guild.id)
+        if not rows:
+            return await ctx.reply(
+                embed=h.warn_embed(
+                    f"Ajoute d'abord des rôles au menu :\n"
+                    f'`{ctx.prefix}addrolecS "Mon rôle" [emoji] [description]`'
+                )
+            )
+        panel = await self.bot.db.selfrole_panel(ctx.guild.id)
+        message = await self._publier(ctx.guild, cible, panel, rows)
+        if message is None:
+            return await ctx.reply(
+                embed=h.err_embed("Tous les rôles enregistrés ont été supprimés.")
+            )
+        await self.bot.db.set_selfrole_panel(ctx.guild.id, "channel_id", cible.id)
+        await self.bot.db.set_selfrole_panel(ctx.guild.id, "message_id", message.id)
+        await self.bot.db.set_selfrole_panel(ctx.guild.id, "ping_new", 1)
+        await ctx.reply(
+            embed=h.ok_embed(
+                f"Menu publié dans {cible.mention}.\n"
+                f"Chaque nouveau membre y sera ping pour choisir son rôle.\n"
+                f"`{ctx.prefix}rlpanel off` pour couper le ping."
+            )
+        )
+
+    @commands.Cog.listener("on_member_join")
+    async def _ping_nouveau(self, member: discord.Member):
+        if member.bot:
+            return
+        panel = await self.bot.db.selfrole_panel(member.guild.id)
+        if not panel or not panel["ping_new"] or not panel["channel_id"]:
+            return
+        salon = member.guild.get_channel(panel["channel_id"])
+        if salon is None:
+            return
+        lien = ""
+        if panel["message_id"]:
+            lien = (f"https://discord.com/channels/{member.guild.id}/"
+                    f"{salon.id}/{panel['message_id']}")
+        e = h.base_embed(
+            "Choisis ton rôle",
+            (f"{member.mention}, sélectionne ton rôle dans le menu "
+             + (f"[juste ici]({lien})." if lien else "ci-dessus.")),
+        )
+        try:
+            # Le ping s'efface au bout de 5 min pour ne pas polluer le salon.
+            await salon.send(
+                content=member.mention, embed=e, delete_after=300,
+                allowed_mentions=discord.AllowedMentions(users=True),
+            )
+        except discord.HTTPException:
+            pass
 
     @rolepanel.command(name="titre", aliases=["title"])
     @h.is_owner_or(manage_roles=True)
