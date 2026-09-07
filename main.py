@@ -104,21 +104,21 @@ COLOR_ERROR = 0xED4245     # red
 COLOR_MUTED = 0x2B2D31     # dark
 
 EMOJI = {
-    "ok": "\u2705",
-    "no": "\u274c",
-    "warn": "\u26a0\ufe0f",
-    "shield": "\U0001f6e1\ufe0f",
-    "ticket": "\U0001f3ab",
-    "wave": "\U0001f44b",
-    "hammer": "\U0001f528",
-    "mute": "\U0001f507",
-    "clock": "\U0001f552",
-    "star": "\u2b50",
-    "chart": "\U0001f4ca",
-    "lock": "\U0001f512",
-    "unlock": "\U0001f513",
-    "boom": "\U0001f4a5",
-    "crown": "\U0001f451",
+    "ok": "",
+    "no": "",
+    "warn": "",
+    "shield": "",
+    "ticket": "",
+    "wave": "",
+    "hammer": "",
+    "mute": "",
+    "clock": "",
+    "star": "",
+    "chart": "",
+    "lock": "",
+    "unlock": "",
+    "boom": "",
+    "crown": "",
 }
 
 # ---------------------------------------------------------------- anti-raid
@@ -543,7 +543,7 @@ CREATE TABLE IF NOT EXISTS stat_channels (
     guild_id    INTEGER NOT NULL,
     channel_id  INTEGER NOT NULL,
     kind        TEXT NOT NULL,      -- members|online|voice|bots|boosts|humans
-    template    TEXT,               -- ex: "\U0001f465 • Membres : {count}"
+    template    TEXT,               -- ex: " • Membres : {count}"
     PRIMARY KEY (channel_id)
 );
 
@@ -2124,7 +2124,7 @@ class Moderation(commands.Cog):
         )
         await channel.send(
             embed=h.base_embed(
-                f"{config.EMOJI['lock']} Salon verrouillé",
+                "Salon verrouillé",
                 h.clean(reason) or "Un modérateur a verrouillé ce salon.",
                 config.COLOR_WARN,
             )
@@ -2144,7 +2144,7 @@ class Moderation(commands.Cog):
         )
         await channel.send(
             embed=h.base_embed(
-                f"{config.EMOJI['unlock']} Salon déverrouillé",
+                "Salon déverrouillé",
                 "Vous pouvez de nouveau écrire.",
                 config.COLOR_SUCCESS,
             )
@@ -2215,7 +2215,7 @@ class Moderation(commands.Cog):
         await new.edit(position=position)
         await new.send(
             embed=h.base_embed(
-                f"{config.EMOJI['boom']} Salon réinitialisé",
+                "Salon réinitialisé",
                 f"Nouveau départ, offert par {ctx.author.mention}.",
                 config.COLOR_WARN,
             ),
@@ -2332,7 +2332,7 @@ class AntiRaid(commands.Cog):
             return
         self.last_alert[guild.id] = time.time()
 
-        e = h.base_embed(f"{config.EMOJI['shield']} {title}", description, color)
+        e = h.base_embed(f"{title}", description, color)
         content = None
         if cfg["alert_role"]:
             role = guild.get_role(cfg["alert_role"])
@@ -2688,7 +2688,7 @@ class AntiRaid(commands.Cog):
         cfg = await self.settings(ctx.guild.id)
         state = "ACTIVÉ" if cfg["enabled"] else "DÉSACTIVÉ"
         color = config.COLOR_SUCCESS if cfg["enabled"] else config.COLOR_MUTED
-        e = h.base_embed(f"{config.EMOJI['shield']} Anti-raid — {state}", color=color)
+        e = h.base_embed(f"Anti-raid — {state}", color=color)
         e.add_field(
             name="Vague d'arrivées",
             value=(
@@ -2836,11 +2836,11 @@ class AntiRaid(commands.Cog):
 
 
 CATEGORIES = [
-    ("Aide générale", "Questions, aide, tout le reste", "\U0001f4ac"),
-    ("Signaler un membre", "Signaler un comportement contraire aux règles", "\U0001f6a8"),
-    ("Contester une sanction", "Contester un mute ou un ban", "\u2696\ufe0f"),
-    ("Partenariat", "Demandes de partenariat ou professionnelles", "\U0001f91d"),
-    ("Signaler un bug", "Quelque chose ne fonctionne pas", "\U0001f41b"),
+    ("Aide générale", "Questions, aide, tout le reste", ""),
+    ("Signaler un membre", "Signaler un comportement contraire aux règles", ""),
+    ("Contester une sanction", "Contester un mute ou un ban", ""),
+    ("Partenariat", "Demandes de partenariat ou professionnelles", ""),
+    ("Signaler un bug", "Quelque chose ne fonctionne pas", ""),
 ]
 
 
@@ -2854,7 +2854,7 @@ async def build_transcript(channel: discord.TextChannel) -> discord.File:
         author = htmllib.escape(str(m.author))
         body = htmllib.escape(m.clean_content) or "<i>(pas de texte)</i>"
         attach = "".join(
-            f'<div class="att">\U0001f4ce {htmllib.escape(a.filename)}</div>'
+            f'<div class="att"> {htmllib.escape(a.filename)}</div>'
             for a in m.attachments
         )
         embeds = "".join(
@@ -2900,7 +2900,7 @@ class TicketPanelView(discord.ui.View):
 class TicketSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label=name, description=desc, emoji=emoji, value=name)
+            discord.SelectOption(label=name, description=desc, value=name)
             for name, desc, emoji in CATEGORIES
         ]
         super().__init__(
@@ -2936,7 +2936,7 @@ class TicketControlView(discord.ui.View):
         )
         return False
 
-    @discord.ui.button(label="Prendre en charge", emoji="\U0001f64b",
+    @discord.ui.button(label="Prendre en charge",
                        style=discord.ButtonStyle.primary, custom_id="ticket:claim")
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._staff_check(interaction):
@@ -2954,7 +2954,7 @@ class TicketControlView(discord.ui.View):
             embed=h.ok_embed(f"{interaction.user.mention} s'occupe de ce ticket.")
         )
 
-    @discord.ui.button(label="Fermer", emoji="\U0001f512",
+    @discord.ui.button(label="Fermer",
                        style=discord.ButtonStyle.danger, custom_id="ticket:close")
     async def close(self, interaction: discord.Interaction, button: discord.ui.Button):
         bot = interaction.client
@@ -2968,7 +2968,7 @@ class TicketControlView(discord.ui.View):
         )
         await cog.close_ticket(interaction.channel, interaction.user)
 
-    @discord.ui.button(label="Transcription", emoji="\U0001f4dc",
+    @discord.ui.button(label="Transcription",
                        style=discord.ButtonStyle.secondary, custom_id="ticket:transcript")
     async def transcript(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._staff_check(interaction):
@@ -3044,7 +3044,7 @@ class Tickets(commands.Cog):
         )
 
         e = h.base_embed(
-            f"{config.EMOJI['ticket']} Ticket #{ticket_id} — {topic}",
+            f"Ticket #{ticket_id} — {topic}",
             (
                 f"Salut {interaction.user.mention}, merci de nous avoir contactés.\n\n"
                 f"**Décris ton problème avec un maximum de détails.** "
@@ -3138,7 +3138,7 @@ class Tickets(commands.Cog):
         cat = ctx.guild.get_channel(cfg["category"]) if cfg["category"] else None
         role = ctx.guild.get_role(cfg["staff_role"]) if cfg["staff_role"] else None
         log = ctx.guild.get_channel(cfg["log_channel"]) if cfg["log_channel"] else None
-        e = h.base_embed(f"{config.EMOJI['ticket']} Système de tickets")
+        e = h.base_embed("Système de tickets")
         e.description = (
             f"**Catégorie :** {cat.name if cat else '*non définie — les tickets iront à la racine*'}\n"
             f"**Rôle staff :** {role.mention if role else '*non défini*'}\n"
@@ -3160,7 +3160,7 @@ class Tickets(commands.Cog):
     async def ticket_panel(self, ctx, channel: discord.TextChannel = None):
         channel = channel or ctx.channel
         e = h.base_embed(
-            f"{config.EMOJI['ticket']} Besoin d'aide ?",
+            "Besoin d'aide ?",
             (
                 "Choisis la catégorie qui correspond à ton problème dans le menu ci-dessous : "
                 "un salon privé s'ouvrira entre toi et le staff.\n\n"
@@ -3316,7 +3316,7 @@ class Welcome(commands.Cog):
 
     def welcome_embed(self, member, text, image_url=None) -> discord.Embed:
         e = h.base_embed(
-            f"{config.EMOJI['wave']} Bienvenue !", text, config.COLOR_SUCCESS
+            "Bienvenue !", text, config.COLOR_SUCCESS
         )
         e.set_thumbnail(url=member.display_avatar.url)
         e.add_field(
@@ -3411,7 +3411,7 @@ class Welcome(commands.Cog):
         wc = ctx.guild.get_channel(cfg["welcome_channel"]) if cfg["welcome_channel"] else None
         gc = ctx.guild.get_channel(cfg["goodbye_channel"]) if cfg["goodbye_channel"] else None
         ar = ctx.guild.get_role(cfg["autorole"]) if cfg["autorole"] else None
-        e = h.base_embed(f"{config.EMOJI['wave']} Système de bienvenue")
+        e = h.base_embed("Système de bienvenue")
         e.add_field(
             name="Welcome",
             value=f"Salon : {wc.mention if wc else '*désactivé*'}\n"
@@ -3442,7 +3442,7 @@ class Welcome(commands.Cog):
         vide pour garder la bannière du serveur.
         """
         message_fr = (
-            "Bienvenue {mention} sur **{server}** ! \U0001f389\n"
+            "Bienvenue {mention} sur **{server}** ! \n"
             "Tu es notre **{ordinal}** membre. Pense à lire le règlement et "
             "amuse-toi bien parmi nous."
         )
@@ -3585,7 +3585,7 @@ class Welcome(commands.Cog):
     async def goodbye_config(self, ctx, *, image_url: str = None):
         """Active les au revoir dans le salon courant, message FR + image."""
         message_fr = (
-            "**{user}** vient de quitter **{server}**. \U0001f44b\n"
+            "**{user}** vient de quitter **{server}**. \n"
             "Nous sommes maintenant **{count}** membres."
         )
         image = None
@@ -3651,13 +3651,13 @@ class Welcome(commands.Cog):
 
 
 TITLES = [
-    (0, "Fantôme", "\U0001f47b"),
-    (50, "Observateur", "\U0001f440"),
-    (250, "Habitué", "\U0001f4ac"),
-    (1000, "Moulin à paroles", "\U0001f5e3\ufe0f"),
-    (5000, "Guerrier du clavier", "\u2328\ufe0f"),
-    (15000, "Meuble du serveur", "\U0001f3db\ufe0f"),
-    (50000, "Candidat à la sortie dehors", "\U0001f33f"),
+    (0, "Fantôme", ""),
+    (50, "Observateur", ""),
+    (250, "Habitué", ""),
+    (1000, "Moulin à paroles", ""),
+    (5000, "Guerrier du clavier", "\u2328"),
+    (15000, "Meuble du serveur", ""),
+    (50000, "Candidat à la sortie dehors", ""),
 ]
 
 
@@ -3749,7 +3749,7 @@ class Stats(commands.Cog):
         # --- activity block
         avg_len = round(chars / messages, 1) if messages else 0
         e.add_field(
-            name=f"{config.EMOJI['chart']} Activité",
+            name="Activité",
             value=(
                 f"Messages : **{messages:,}** (rang **#{msg_rank}**)\n"
                 f"Caractères : **{chars:,}**\n"
@@ -3766,7 +3766,7 @@ class Stats(commands.Cog):
             f"`{r['command']}` \u00d7{r['uses']}" for r in top_cmds
         ) or "*rien pour l'instant*"
         e.add_field(
-            name="\u2699\ufe0f Commandes",
+            name="Commandes",
             value=f"Total exécutées : **{cmds_total:,}**\n**Favorites :**\n{cmd_lines}",
             inline=True,
         )
@@ -3774,14 +3774,14 @@ class Stats(commands.Cog):
         # --- server block
         joined = member.joined_at
         e.add_field(
-            name=f"{config.EMOJI['crown']} Serveur",
+            name="Serveur",
             value=(
                 f"Arrivé : {h.ts(joined) if joined else '?'}\n"
                 f"Compte créé : {h.ts(member.created_at)}\n"
                 f"Premier suivi : {h.ts(first_seen) if first_seen else '—'}\n"
                 f"Vu pour la dernière fois : {h.ts(last_seen) if last_seen else '—'}\n"
                 f"Dossiers de modération : **{cases}**\n"
-                f"Booster : {'oui ' + config.EMOJI['star'] if member.premium_since else 'non'}"
+                f"Booster : {'oui' if member.premium_since else 'non'}"
             ),
             inline=False,
         )
@@ -3832,21 +3832,21 @@ class Stats(commands.Cog):
         # --- achievements, entirely for laughs
         ach = []
         if messages and chars / messages > 200:
-            ach.append("\U0001f4dc **Essayiste** — personne ne les lit")
+            ach.append("**Essayiste** — personne ne les lit")
         if messages and chars / messages < 8 and messages > 100:
-            ach.append("\U0001f4a8 **Monosyllabique** — 'ok'")
+            ach.append("**Monosyllabique** — 'ok'")
         if reactions > messages and messages > 20:
-            ach.append("\U0001f440 **Réacteur** — plus d'emojis que de mots")
+            ach.append("**Réacteur** — plus d'emojis que de mots")
         if voice > 360000:
-            ach.append("\U0001f3a7 **En vocal en permanence**")
+            ach.append("**En vocal en permanence**")
         if cases == 0 and messages > 500:
-            ach.append("\U0001f607 **Irréprochable** — 500+ messages, zéro dossier")
+            ach.append("**Irréprochable** — 500+ messages, zéro dossier")
         if cases >= 5:
-            ach.append("\U0001f6a9 **Habitué des sanctions** — les modos connaissent ton nom")
+            ach.append("**Habitué des sanctions** — les modos connaissent ton nom")
         if member.premium_since:
-            ach.append("\U0001f49c **Booster** — merci pour l'argent")
+            ach.append("**Booster** — merci pour l'argent")
         if msg_rank == 1:
-            ach.append("\U0001f947 **Bavard n°1** du serveur")
+            ach.append("**Bavard n°1** du serveur")
         if ach:
             e.add_field(name="Succès", value="\n".join(ach[:6]), inline=False)
 
@@ -3880,7 +3880,7 @@ class Stats(commands.Cog):
             return await ctx.reply(embed=h.warn_embed("Aucune donnée pour l'instant."),
                                    mention_author=False)
 
-        medals = ["\U0001f947", "\U0001f948", "\U0001f949"]
+        medals = ["", "", ""]
         lines = []
         for i, r in enumerate(rows):
             member = ctx.guild.get_member(r["user_id"])
@@ -3889,7 +3889,7 @@ class Stats(commands.Cog):
             prefix = medals[i] if i < 3 else f"`{i + 1:>2}.`"
             lines.append(f"{prefix} **{h.clean(name, 30)}** — {value}")
 
-        e = h.base_embed(f"{config.EMOJI['chart']} Classement {label} — {ctx.guild.name}",
+        e = h.base_embed(f"Classement {label} — {ctx.guild.name}",
                          "\n".join(lines))
         my_rank = await self.bot.db.rank_of(ctx.guild.id, ctx.author.id, column)
         e.set_footer(text=f"Tu es #{my_rank}")
@@ -4051,13 +4051,13 @@ class ClaimView(discord.ui.View):
             except discord.HTTPException:
                 pass
 
-    @discord.ui.button(label="Accepter", emoji="\u2705", style=discord.ButtonStyle.success)
+    @discord.ui.button(label="Accepter", style=discord.ButtonStyle.success)
     async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.result = True
         await interaction.response.defer()
         self.stop()
 
-    @discord.ui.button(label="Non merci", emoji="\u274c", style=discord.ButtonStyle.secondary)
+    @discord.ui.button(label="Non merci", style=discord.ButtonStyle.secondary)
     async def decline(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.result = False
         await interaction.response.defer()
@@ -4222,7 +4222,7 @@ class Fun(commands.Cog):
 
     @commands.command(name="8ball", aliases=["8b"])
     async def eightball(self, ctx, *, question: str):
-        e = h.base_embed("\U0001f3b1 Boule magique")
+        e = h.base_embed("Boule magique")
         e.add_field(name="Tu as demandé", value=h.clean(question, 250), inline=False)
         e.add_field(name="Réponse", value=random.choice(EIGHT_BALL), inline=False)
         await ctx.reply(embed=e, mention_author=False)
@@ -4239,7 +4239,7 @@ class Fun(commands.Cog):
         name = a.display_name[: len(a.display_name) // 2] + \
             b.display_name[len(b.display_name) // 2:]
         e = h.base_embed(
-            f"\U0001f498 {a.display_name} \u00d7 {b.display_name}",
+            f" {a.display_name} \u00d7 {b.display_name}",
             f"**{seed}%**\n`{h.progress_bar(seed, 100, 20)}`\n\n"
             f"Nom du couple : **{h.clean(name, 32)}**\n{verdict}",
             config.COLOR_ERROR if seed < 40 else config.COLOR_SUCCESS,
@@ -4274,7 +4274,7 @@ class Fun(commands.Cog):
                                    mention_author=False)
         rolls = [random.randint(1, sides) for _ in range(count)]
         e = h.base_embed(
-            f"\U0001f3b2 {dice}",
+            f" {dice}",
             f"{' + '.join(map(str, rolls))}\n\n**Total : {sum(rolls)}**"
             if count > 1 else f"**{rolls[0]}**",
         )
@@ -4282,7 +4282,7 @@ class Fun(commands.Cog):
 
     @commands.command(name="coinflip", aliases=["flip", "cf"])
     async def coinflip(self, ctx):
-        await ctx.reply(f"\U0001fa99 **{random.choice(['Pile', 'Face'])}**",
+        await ctx.reply(f"**{random.choice(['Pile', 'Face'])}**",
                         mention_author=False)
 
     @commands.command(name="choose", aliases=["pick"], help="+choose pizza | sushi | tacos")
@@ -4292,17 +4292,17 @@ class Fun(commands.Cog):
             return await ctx.reply(embed=h.err_embed("Donne-m'en au moins deux, séparés par `|`."),
                                    mention_author=False)
         await ctx.reply(
-            embed=h.base_embed("\U0001f914 Je choisis", f"**{h.clean(random.choice(parts), 200)}**"),
+            embed=h.base_embed("Je choisis", f"**{h.clean(random.choice(parts), 200)}**"),
             mention_author=False,
         )
 
-    @commands.command(name="poll", help='-poll "Ta question" option1 | option2')
+    @commands.command(name="poll", help='+poll "Ta question" option1 | option2')
     @commands.guild_only()
     async def poll(self, ctx, question: str, *, options: str = None):
         digits = ["1\ufe0f\u20e3", "2\ufe0f\u20e3", "3\ufe0f\u20e3", "4\ufe0f\u20e3",
                   "5\ufe0f\u20e3", "6\ufe0f\u20e3", "7\ufe0f\u20e3", "8\ufe0f\u20e3"]
         if not options:
-            e = h.base_embed("\U0001f4ca " + h.clean(question, 250),
+            e = h.base_embed("" + h.clean(question, 250),
                              f"Votez ci-dessous.\n\n— {ctx.author.mention}")
             msg = await ctx.send(embed=e)
             await msg.add_reaction("\U0001f44d")
@@ -4311,7 +4311,7 @@ class Fun(commands.Cog):
             return
         parts = [p.strip() for p in options.split("|") if p.strip()][:8]
         body = "\n".join(f"{digits[i]} {h.clean(p, 100)}" for i, p in enumerate(parts))
-        e = h.base_embed("\U0001f4ca " + h.clean(question, 250),
+        e = h.base_embed("" + h.clean(question, 250),
                          body + f"\n\n— {ctx.author.mention}")
         msg = await ctx.send(embed=e)
         for i in range(len(parts)):
@@ -4344,7 +4344,7 @@ class Fun(commands.Cog):
         try:
             await ctx.reply(
                 content=ctx.author.mention,
-                embed=h.base_embed(f"{config.EMOJI['clock']} Rappel",
+                embed=h.base_embed("Rappel",
                                    h.clean(what, 500)),
                 mention_author=True,
             )
@@ -4902,7 +4902,7 @@ class OpMod(commands.Cog):
     @commands.guild_only()
     @h.is_owner_or(manage_guild=True)
     async def announce(self, ctx, salon: discord.TextChannel, *, message: str):
-        e = h.base_embed("\U0001f4e2 Annonce", h.clean(message, 4000))
+        e = h.base_embed("Annonce", h.clean(message, 4000))
         e.set_footer(text=f"Par {ctx.author}", icon_url=ctx.author.display_avatar.url)
         await salon.send(embed=e)
         await ctx.reply(embed=h.ok_embed(f"Annonce publiée dans {salon.mention}."))
@@ -5046,7 +5046,7 @@ class VoiceStats(commands.Cog):
         en_ligne, en_vocal, en_stream, camera = self._compter(g)
         humains = sum(1 for m in g.members if not m.bot)
 
-        e = h.base_embed(f"\U0001f3c6 {g.name} — Statistiques")
+        e = h.base_embed(f"{g.name} — Statistiques")
         e.description = (
             f"*Membres :* **{g.member_count:,}**\n"
             f"*En ligne :* **{en_ligne:,}**\n"
@@ -5524,32 +5524,32 @@ class Extras(commands.Cog):
         #
         # Plan : (nom_categorie, profil_categorie, [(nom_salon, profil)], [(nom_vocal, profil)])
         PLAN = [
-            ("\U0001f4cb Informations", "readonly", [
+            ("Informations", "readonly", [
                 ("règlement", "readonly"), ("annonces", "readonly"),
                 ("mises-à-jour", "readonly"), ("rôles", "readonly"),
             ], []),
-            ("\U0001f4ac Général", "normal", [
+            ("Général", "normal", [
                 ("général", "normal"), ("discussion", "normal"),
                 ("commandes-bot", "normal"), ("memes", "normal"),
                 ("photos", "images"),
             ], [("Général", "voice"), ("Musique", "voice")]),
-            ("\U0001f3ae Vocal", "voice", [], [
+            ("Vocal", "voice", [], [
                 ("Vocal 1", "voice"), ("Vocal 2", "voice"),
                 ("\u300e+\u300f Créer votre salon", "voice"), ("AFK", "voice"),
             ]),
-            ("\U0001f3ab Support", "normal", [
+            ("Support", "normal", [
                 ("ouvrir-un-ticket", "readonly"),
             ], []),
-            ("\U0001f4cb Logs", "hidden", [
+            ("Logs", "hidden", [
                 ("logs-textuel", "hidden"), ("logs-moderation", "hidden"),
                 ("logs-vocal", "hidden"), ("logs-arrivees", "hidden"),
             ], []),
-            ("\U0001f4ca Statistiques", "voicelock", [], [
-                ("\U0001f465 \u2022 Membres : 0", "voicelock"),
-                ("\U0001f7e2 \u2022 En ligne : 0", "voicelock"),
-                ("\U0001f50a \u2022 En vocal : 0", "voicelock"),
+            ("Statistiques", "voicelock", [], [
+                ("\u2022 Membres : 0", "voicelock"),
+                ("\u2022 En ligne : 0", "voicelock"),
+                ("\u2022 En vocal : 0", "voicelock"),
             ]),
-            ("\U0001f6e0\ufe0f Staff", "staff", [
+            ("Staff", "staff", [
                 ("salon-staff", "staff"), ("logs-staff", "staff"),
                 ("sanctions", "staff"),
             ], [("Vocal Staff", "staff")]),
@@ -5918,7 +5918,7 @@ class Extras(commands.Cog):
         secondes = h.parse_duration(duree)
         if not secondes or secondes > 86400:
             return await ctx.reply(embed=h.err_embed("Durée entre 1s et 24h."))
-        e = h.base_embed("\U0001f4ca " + h.clean(question, 250),
+        e = h.base_embed("" + h.clean(question, 250),
                          f"Vote — fin {h.ts(h.now() + secondes)}\n— {ctx.author.mention}")
         msg = await ctx.send(embed=e)
         await msg.add_reaction("\u2705")
@@ -5934,7 +5934,7 @@ class Extras(commands.Cog):
             await ctx.send(
                 embed=h.base_embed(
                     "Sondage terminé",
-                    f"**{h.clean(question, 250)}**\n\u2705 {po} · \u274c {pn}\n\n**{verdict}**",
+                    f"**{h.clean(question, 250)}**\n {po} ·  {pn}\n\n**{verdict}**",
                 )
             )
         except discord.HTTPException:
@@ -5972,7 +5972,7 @@ class Extras(commands.Cog):
             await asyncio.sleep(0.25)
         await status.edit(
             embed=h.ok_embed(
-                f"\U0001f512 **{verrouilles}** salons verrouillés.\n"
+                f" **{verrouilles}** salons verrouillés.\n"
                 f"Rouvre tout avec `{ctx.prefix}openall`."
             )
         )
@@ -5997,7 +5997,7 @@ class Extras(commands.Cog):
             except discord.HTTPException:
                 pass
             await asyncio.sleep(0.25)
-        await status.edit(embed=h.ok_embed(f"\U0001f513 **{ouverts}** salons rouverts."))
+        await status.edit(embed=h.ok_embed(f"**{ouverts}** salons rouverts."))
 
     @commands.command(name="msg", aliases=["mp"],
                       help="+msg <userid> <message> — envoie un MP à un membre.")
@@ -6147,7 +6147,7 @@ class HardBan(commands.Cog):
         await self._log(
             ctx.guild,
             h.base_embed(
-                f"{config.EMOJI['hammer']} Hardban",
+                "Hardban",
                 f"**Cible :** {nom} `{cible_id}`\n"
                 f"**Par :** {ctx.author.mention}\n"
                 f"**Raison :** {h.clean(reason) or 'aucune'}",
@@ -6204,7 +6204,7 @@ class HardBan(commands.Cog):
         cfg = await self.bot.db.hardban_config(ctx.guild.id)
         log = ctx.guild.get_channel(cfg["log_channel"]) if cfg["log_channel"] else None
         e = h.base_embed(
-            f"{config.EMOJI['shield']} Configuration hardban",
+            "Configuration hardban",
             f"**Auto-ban des alts :** "
             f"{'activé' if cfg['autoban_alts'] else 'désactivé'}\n"
             f"**Âge de compte suspect :** moins de **{cfg['max_account_age']}j**\n"
@@ -6261,7 +6261,7 @@ class HardBan(commands.Cog):
             await self._log(
                 guild,
                 h.base_embed(
-                    f"{config.EMOJI['shield']} Retour d'un compte hardban bloqué",
+                    "Retour d'un compte hardban bloqué",
                     f"{member} `{member.id}` a tenté de revenir et a été re-banni.",
                     config.COLOR_ERROR,
                 ),
@@ -6311,7 +6311,7 @@ class HardBan(commands.Cog):
             await self._log(
                 guild,
                 h.base_embed(
-                    f"{config.EMOJI['boom']} Alt banni automatiquement",
+                    "Alt banni automatiquement",
                     f"**Compte :** {member} `{member.id}`\n"
                     f"**Âge :** {age_jours}j\n"
                     f"**Ressemble à :** {source['name']} `{source['user_id']}` "
@@ -6378,7 +6378,7 @@ class RulesView(discord.ui.View):
         super().__init__(timeout=None)
         self.bot = bot
 
-    @discord.ui.button(label="J'accepte le règlement", emoji="\u2705",
+    @discord.ui.button(label="J'accepte le règlement",
                        style=discord.ButtonStyle.success, custom_id="rules:accept")
     async def accept(self, interaction: discord.Interaction, button: discord.ui.Button):
         bot = interaction.client
@@ -6449,7 +6449,7 @@ class Rules(commands.Cog):
                 )
             )
         texte = row["content"] or DEFAULT_RULES
-        e = h.base_embed(f"\U0001f4dc Règlement — {ctx.guild.name}", texte)
+        e = h.base_embed(f"Règlement — {ctx.guild.name}", texte)
         if ctx.guild.icon:
             e.set_thumbnail(url=ctx.guild.icon.url)
         e.set_footer(text="Clique sur le bouton pour accepter et débloquer le serveur.")
@@ -6558,12 +6558,12 @@ class Rules(commands.Cog):
 
 # Modèles par défaut. {count} est remplacé par le nombre.
 MODELES = {
-    "members": "\U0001f465 \u2022 Membres : {count}",
-    "humans":  "\U0001f9d1 \u2022 Humains : {count}",
-    "bots":    "\U0001f916 \u2022 Bots : {count}",
-    "online":  "\U0001f7e2 \u2022 En ligne : {count}",
-    "voice":   "\U0001f50a \u2022 En vocal : {count}",
-    "boosts":  "\U0001f680 \u2022 Boosts : {count}",
+    "members": " \u2022 Membres : {count}",
+    "humans":  "\u2022 Humains : {count}",
+    "bots":    "\u2022 Bots : {count}",
+    "online":  "\u2022 En ligne : {count}",
+    "voice":   "\u2022 En vocal : {count}",
+    "boosts":  "\u2022 Boosts : {count}",
 }
 
 DESCRIPTIONS = {
@@ -6656,21 +6656,21 @@ class StatsChannels(commands.Cog):
             corps = "\n".join(lignes) + (
                 f"\n\n`{p}compteurs add <type>` · `{p}compteurs remove <#salon>`"
             )
-        await ctx.reply(embed=h.base_embed("\U0001f4ca Salons compteurs", corps))
+        await ctx.reply(embed=h.base_embed("Salons compteurs", corps))
 
     @statschannels.command(name="setup", aliases=["config"])
     @h.is_owner_or(administrator=True)
     @commands.bot_has_permissions(manage_channels=True)
     async def sc_setup(self, ctx):
         async with ctx.typing():
-            categorie = discord.utils.get(ctx.guild.categories, name="\U0001f4ca Statistiques")
+            categorie = discord.utils.get(ctx.guild.categories, name="Statistiques")
             if categorie is None:
                 # Personne ne doit pouvoir se connecter à ces salons vitrine.
                 overwrites = {
                     ctx.guild.default_role: discord.PermissionOverwrite(connect=False)
                 }
                 categorie = await ctx.guild.create_category(
-                    "\U0001f4ca Statistiques", overwrites=overwrites,
+                    " Statistiques", overwrites=overwrites,
                     reason="Salons compteurs",
                 )
             crees = []
@@ -6706,7 +6706,7 @@ class StatsChannels(commands.Cog):
         modele = modele or MODELES[kind]
         if "{count}" not in modele:
             modele += " {count}"
-        categorie = discord.utils.get(ctx.guild.categories, name="\U0001f4ca Statistiques")
+        categorie = discord.utils.get(ctx.guild.categories, name="Statistiques")
         nom = modele.replace("{count}", f"{self.valeur(ctx.guild, kind):,}")
         salon = await ctx.guild.create_voice_channel(
             nom, category=categorie,
@@ -6788,7 +6788,7 @@ class Logging(commands.Cog):
         if not message.guild or message.author.bot:
             return
         e = h.base_embed(
-            "\U0001f5d1\ufe0f Message supprimé", color=config.COLOR_ERROR
+            " Message supprimé", color=config.COLOR_ERROR
         )
         e.add_field(name="Auteur", value=f"{message.author.mention} `{message.author.id}`",
                     inline=True)
@@ -6805,7 +6805,7 @@ class Logging(commands.Cog):
     async def on_message_edit(self, before, after):
         if not before.guild or before.author.bot or before.content == after.content:
             return
-        e = h.base_embed("\u270f\ufe0f Message modifié", color=config.COLOR_WARN)
+        e = h.base_embed("Message modifié", color=config.COLOR_WARN)
         e.add_field(name="Auteur", value=f"{before.author.mention}", inline=True)
         e.add_field(name="Salon", value=before.channel.mention, inline=True)
         e.add_field(name="Avant", value=h.clean(before.content, 500) or "*vide*",
@@ -6820,14 +6820,14 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_ban(self, guild, user):
-        e = h.base_embed("\U0001f528 Membre banni", color=config.COLOR_ERROR)
+        e = h.base_embed("Membre banni", color=config.COLOR_ERROR)
         e.add_field(name="Membre", value=f"{user} `{user.id}`", inline=False)
         await self._ajouter_auteur(guild, discord.AuditLogAction.ban, user.id, e)
         await self.envoyer(guild, "log_mod", e)
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild, user):
-        e = h.base_embed("\U0001f513 Membre débanni", color=config.COLOR_SUCCESS)
+        e = h.base_embed("Membre débanni", color=config.COLOR_SUCCESS)
         e.add_field(name="Membre", value=f"{user} `{user.id}`", inline=False)
         await self.envoyer(guild, "log_mod", e)
 
@@ -6840,7 +6840,7 @@ class Logging(commands.Cog):
         retires = [r for r in before.roles if r not in after.roles]
         if not ajoutes and not retires:
             return
-        e = h.base_embed("\U0001f3ad Rôles modifiés", color=config.COLOR_PRIMARY)
+        e = h.base_embed("Rôles modifiés", color=config.COLOR_PRIMARY)
         e.add_field(name="Membre", value=after.mention, inline=False)
         if ajoutes:
             e.add_field(name="Ajoutés", value=", ".join(r.mention for r in ajoutes),
@@ -6877,15 +6877,15 @@ class Logging(commands.Cog):
             return
         e = None
         if before.channel is None and after.channel is not None:
-            e = h.base_embed("\U0001f50a Arrivée en vocal", color=config.COLOR_SUCCESS)
+            e = h.base_embed("Arrivée en vocal", color=config.COLOR_SUCCESS)
             e.add_field(name="Membre", value=member.mention, inline=True)
             e.add_field(name="Salon", value=after.channel.mention, inline=True)
         elif before.channel is not None and after.channel is None:
-            e = h.base_embed("\U0001f507 Départ du vocal", color=config.COLOR_MUTED)
+            e = h.base_embed("Départ du vocal", color=config.COLOR_MUTED)
             e.add_field(name="Membre", value=member.mention, inline=True)
             e.add_field(name="Salon", value=before.channel.mention, inline=True)
         elif before.channel != after.channel:
-            e = h.base_embed("\U0001f504 Déplacement vocal", color=config.COLOR_PRIMARY)
+            e = h.base_embed("Déplacement vocal", color=config.COLOR_PRIMARY)
             e.add_field(name="Membre", value=member.mention, inline=False)
             e.add_field(name="De", value=before.channel.mention, inline=True)
             e.add_field(name="Vers", value=after.channel.mention, inline=True)
@@ -6896,7 +6896,7 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        e = h.base_embed("\U0001f4e5 Membre arrivé", color=config.COLOR_SUCCESS)
+        e = h.base_embed("Membre arrivé", color=config.COLOR_SUCCESS)
         e.add_field(name="Membre", value=f"{member.mention} `{member.id}`", inline=False)
         e.add_field(name="Compte créé", value=h.ts(member.created_at), inline=True)
         e.add_field(name="Membres", value=str(member.guild.member_count), inline=True)
@@ -6905,7 +6905,7 @@ class Logging(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_remove(self, member):
-        e = h.base_embed("\U0001f4e4 Membre parti", color=config.COLOR_MUTED)
+        e = h.base_embed("Membre parti", color=config.COLOR_MUTED)
         e.add_field(name="Membre", value=f"{member} `{member.id}`", inline=False)
         roles = [r.mention for r in member.roles if r != member.guild.default_role]
         if roles:
@@ -6929,12 +6929,12 @@ class Logging(commands.Cog):
             return c.mention if c else "*non défini*"
 
         e = h.base_embed(
-            "\U0001f4cb Système de logs",
+            " Système de logs",
             f"**État :** {'activé' if cfg['enabled'] else 'désactivé'}\n\n"
-            f"\U0001f4dd Textuel (suppr./édit.) : {salon('log_text')}\n"
-            f"\U0001f528 Modération (bans/rôles) : {salon('log_mod')}\n"
-            f"\U0001f50a Vocal (arrivées/départs) : {salon('log_voice')}\n"
-            f"\U0001f6aa Arrivées/départs membres : {salon('log_join')}\n\n"
+            f" Textuel (suppr./édit.) : {salon('log_text')}\n"
+            f" Modération (bans/rôles) : {salon('log_mod')}\n"
+            f" Vocal (arrivées/départs) : {salon('log_voice')}\n"
+            f" Arrivées/départs membres : {salon('log_join')}\n\n"
             f"`{p}logs setup` — crée tous les salons d'un coup\n"
             f"`{p}logs textuel <#salon>`\n"
             f"`{p}logs moderation <#salon>`\n"
@@ -6965,10 +6965,10 @@ class Logging(commands.Cog):
                 ctx.guild.me: discord.PermissionOverwrite(view_channel=True,
                                                           send_messages=True),
             }
-            categorie = discord.utils.get(ctx.guild.categories, name="\U0001f4cb logs")
+            categorie = discord.utils.get(ctx.guild.categories, name="logs")
             if categorie is None:
                 categorie = await ctx.guild.create_category(
-                    "\U0001f4cb logs", overwrites=overwrites, reason="Système de logs"
+                    " logs", overwrites=overwrites, reason="Système de logs"
                 )
             salons = {
                 "log_text": "logs-textuel",
@@ -7140,7 +7140,7 @@ class MediaOnly(commands.Cog):
         cog_log = self.bot.get_cog("Logging")
         if cog_log:
             e = h.base_embed(
-                "\U0001f4f7 Salon photo — message texte bloqué",
+                " Salon photo — message texte bloqué",
                 f"**Membre :** {message.author.mention} `{message.author.id}`\n"
                 f"**Salon :** {message.channel.mention}\n"
                 f"**Sanction :** {applied}",
@@ -7172,7 +7172,7 @@ class MediaOnly(commands.Cog):
                 lignes.append(f"• {salon.mention if salon else r['channel_id']} — "
                               f"mute {r['mute_minutes']} min")
             corps = "\n".join(lignes) + f"\n\n`{p}mediaonly remove #salon` pour retirer."
-        await ctx.reply(embed=h.base_embed("\U0001f4f7 Salons photo uniquement", corps))
+        await ctx.reply(embed=h.base_embed("Salons photo uniquement", corps))
 
     @mediaonly.command(name="add", aliases=["set", "on"])
     @h.is_owner_or(manage_channels=True)
@@ -7308,7 +7308,7 @@ class Tools(commands.Cog):
                 pass
         try:
             nouveau = await message.channel.send(
-                embed=h.base_embed("\U0001f4cc Épinglé", h.clean(row["content"], 3000))
+                embed=h.base_embed("Épinglé", h.clean(row["content"], 3000))
             )
             await self.bot.db.sticky_last(message.channel.id, nouveau.id)
         except discord.HTTPException:
@@ -7426,9 +7426,9 @@ class Tools(commands.Cog):
         fin = h.now() + secondes
 
         e = h.base_embed(
-            f"\U0001f389 {h.clean(lot, 250)}",
+            f" {h.clean(lot, 250)}",
             (
-                f"Réagis avec \U0001f389 pour participer !\n\n"
+                f"Réagis avec pour participer !\n\n"
                 f"**Gagnants :** {gagnants}\n"
                 f"**Fin :** {h.ts(fin)} ({h.ts(fin, 'f')})\n"
                 f"**Organisé par :** {ctx.author.mention}"
@@ -7502,7 +7502,7 @@ class Tools(commands.Cog):
         await salon.send(
             content=mention,
             embed=h.base_embed(
-                "\U0001f389 Concours terminé",
+                " Concours terminé",
                 f"**Lot :** {row['prize']}\n**Gagnant(s) :** {mention}\n\n"
                 f"Félicitations !",
                 config.COLOR_SUCCESS,
@@ -7748,7 +7748,7 @@ class Tools(commands.Cog):
 
     @commands.command(name="clap", help="Ajoute 👏 entre 👏 les 👏 mots")
     async def clap(self, ctx, *, texte: str):
-        await ctx.reply(h.clean(" \U0001f44f ".join(texte.split()), 1900))
+        await ctx.reply(h.clean("\U0001f44f".join(texte.split()), 1900))
 
     @commands.command(name="espace", aliases=["spaced"])
     async def espace(self, ctx, *, texte: str):
@@ -7758,21 +7758,21 @@ class Tools(commands.Cog):
                       help="Propose une idée au staff.")
     @commands.guild_only()
     async def suggest(self, ctx, *, idee: str):
-        e = h.base_embed("\U0001f4a1 Suggestion", h.clean(idee, 2000))
+        e = h.base_embed("Suggestion", h.clean(idee, 2000))
         e.set_author(name=str(ctx.author), icon_url=ctx.author.display_avatar.url)
         e.set_footer(text=f"ID : {ctx.author.id}")
         message = await ctx.send(embed=e)
-        for emoji in ("\U0001f44d", "\U0001f44e"):
+        for emoji in ("", ""):
             await message.add_reaction(emoji)
 
     @commands.command(name="poll2", aliases=["sondage"],
                       help="Sondage rapide oui/non. -sondage On change de logo ?")
     @commands.guild_only()
     async def sondage(self, ctx, *, question: str):
-        e = h.base_embed("\U0001f4ca " + h.clean(question, 250),
+        e = h.base_embed("" + h.clean(question, 250),
                          f"— {ctx.author.mention}")
         message = await ctx.send(embed=e)
-        for emoji in ("\u2705", "\u274c", "\U0001f937"):
+        for emoji in ("", "", ""):
             await message.add_reaction(emoji)
 
     @commands.command(name="uptime", aliases=["enligne"])
@@ -7800,7 +7800,7 @@ B = config.PREFIX
 E = config.ELEVATED_PREFIX
 
 FICHES = {
-    "Modération": ("\U0001f528", B, [
+    "Modération": ("", B, [
         (f"{B}ban <@user|ID> [durée] [raison]", "Bannit un membre"),
         (f"{B}tempban <@user> <durée> <raison>", "Ban temporaire auto"),
         (f"{B}kick <@user> [raison]", "Expulse un membre"),
@@ -7814,7 +7814,7 @@ FICHES = {
         (f"{B}slowmode <temps>", "Active le mode lent"),
         (f"{B}jail <@user> [durée]", "Emprisonne un membre"),
     ]),
-    "Surveillance & Infos": ("\U0001f50e", B, [
+    "Surveillance & Infos": ("", B, [
         (f"{B}history <@user|ID>", "Dossier du membre (casier)"),
         (f"{B}user <@user|ID>", "Infos détaillées"),
         (f"{B}pic <@user|ID>", "Photo de profil (pp)"),
@@ -7827,7 +7827,7 @@ FICHES = {
         (f"{B}vc", "Statistiques vocales"),
         (f"{B}notes <@user>", "Notes internes sur un membre"),
     ]),
-    "Sanctions & Logs": ("\U0001f4dc", E, [
+    "Sanctions & Logs": ("", E, [
         (f"{E}sanction <@user|ID>", "Historique des sanctions"),
         (f"{E}mutelist", "Liste des membres mute/bannis"),
         (f"{E}delsanction <ID>", "Supprime une sanction"),
@@ -7837,7 +7837,7 @@ FICHES = {
         (f"{E}auditlog [n]", "Journal d'audit du serveur"),
         (f"{E}clearwarns <@user>", "Efface les dossiers d'un membre"),
     ]),
-    "Blacklist / Hardban (Owner)": ("\U0001f6ab", E, [
+    "Blacklist / Hardban (Owner)": ("", E, [
         (f"{E}bl <@user|ID> [raison]", "Ban anti-retour + anti-alt"),
         (f"{E}unbl <ID>", "Lève le ban"),
         (f"{E}bls", "Liste des bannis"),
@@ -7845,7 +7845,7 @@ FICHES = {
         (f"{E}botbl <@user>", "Bloque juste l'usage du bot (léger)"),
         (f"{E}whitelist add <@role>", "Rôle exempté de l'automod"),
     ]),
-    "Rôles & Salons (Owner)": ("\u2699\ufe0f", E, [
+    "Rôles & Salons (Owner)": ("", E, [
         (f"{E}createrole <nom> [#couleur]", "Crée un rôle"),
         (f"{E}deleterole <@role>", "Supprime un rôle"),
         (f"{E}rolecolor <@role> <#hex>", "Change la couleur d'un rôle"),
@@ -7859,7 +7859,7 @@ FICHES = {
         (f'{E}addrolecS "nom" [emoji]', "Ajoute un rôle au menu de choix"),
         (f"{E}rolepanel [#salon]", "Publie le menu « choisis ton rôle »"),
     ]),
-    "Vocal": ("\U0001f39b\ufe0f", B, [
+    "Vocal": ("", B, [
         (f"{B}vckick <@user>", "Déconnecte du vocal"),
         (f"{B}vcmove <@user> <salon>", "Déplace en vocal"),
         (f"{B}summon <@user>", "Amène un membre dans ton salon"),
@@ -7868,14 +7868,14 @@ FICHES = {
         (f"{B}muteall / {B}unmuteall", "Coupe le micro de tout le vocal"),
         (f"{B}voice setup", "Salons « créer votre salon »"),
     ]),
-    "Tickets & Bienvenue": ("\U0001f3ab", E, [
+    "Tickets & Bienvenue": ("", E, [
         (f"{E}ticket panel", "Publie le panneau de tickets"),
         (f"{E}ticket staff <@role>", "Rôle du staff des tickets"),
         (f"{E}welcome channel <#salon>", "Salon de bienvenue"),
         (f"{E}welcome autorole <@role>", "Rôle automatique à l'arrivée"),
         (f"{E}goodbye channel <#salon>", "Salon des départs"),
     ]),
-    "Sécurité (Owner)": ("\U0001f6e1\ufe0f", E, [
+    "Sécurité (Owner)": ("", E, [
         (f"{E}antiraid on / off", "Active la protection anti-raid"),
         (f"{E}antiraid set <clé> <valeur>", "Règle les seuils"),
         (f"{E}antiraid panic [min]", "Verrouillage d'urgence"),
@@ -7886,7 +7886,7 @@ FICHES = {
         (f"{E}lockdown on / off", "Verrouille tout le serveur"),
         (f"{E}verifylevel <niveau>", "Niveau de vérification"),
     ]),
-    "Outils & Fun": ("\U0001f9f0", B, [
+    "Outils & Fun": ("", B, [
         (f"{B}tag <nom>", "Réponses personnalisées"),
         (f"{B}giveaway start <durée> <n> <lot>", "Lance un concours"),
         (f"{B}sticky set <texte>", "Message toujours épinglé"),
@@ -7902,7 +7902,7 @@ FICHES = {
 class PanelSelect(discord.ui.Select):
     def __init__(self):
         options = [
-            discord.SelectOption(label=titre, emoji=data[0],
+            discord.SelectOption(label=titre,
                                  description=f"Préfixe {data[1]}", value=titre)
             for titre, data in FICHES.items()
         ]
@@ -7940,7 +7940,7 @@ class Panel(commands.Cog):
     async def panel(self, ctx):
         total = len([c for c in self.bot.walk_commands() if not c.hidden])
         e = h.base_embed(
-            f"{config.EMOJI['crown']} Panneau de commandes",
+            "Panneau de commandes",
             (
                 f"**{total}+** commandes en **{len(FICHES)}** catégories.\n\n"
                 f"**Deux préfixes actifs :**\n"
@@ -8123,21 +8123,21 @@ class VoicePanelView(discord.ui.View):
         return False
 
     # -------------------------------------------------- ligne 1
-    @discord.ui.button(label="Renommer", emoji="\u270f\ufe0f", row=0,
+    @discord.ui.button(label="Renommer", row=0,
                        style=discord.ButtonStyle.secondary, custom_id="voice:rename")
     async def rename(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._owner_check(interaction):
             return
         await interaction.response.send_modal(RenameModal())
 
-    @discord.ui.button(label="Limite", emoji="\U0001f465", row=0,
+    @discord.ui.button(label="Limite", row=0,
                        style=discord.ButtonStyle.secondary, custom_id="voice:limit")
     async def limit(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._owner_check(interaction):
             return
         await interaction.response.send_modal(LimitModal())
 
-    @discord.ui.button(label="Verrouiller", emoji="\U0001f512", row=0,
+    @discord.ui.button(label="Verrouiller", row=0,
                        style=discord.ButtonStyle.primary, custom_id="voice:lock")
     async def lock(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._owner_check(interaction):
@@ -8155,7 +8155,7 @@ class VoicePanelView(discord.ui.View):
             )
         )
 
-    @discord.ui.button(label="Masquer", emoji="\U0001f441\ufe0f", row=0,
+    @discord.ui.button(label="Masquer", row=0,
                        style=discord.ButtonStyle.primary, custom_id="voice:hide")
     async def hide(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._owner_check(interaction):
@@ -8173,7 +8173,7 @@ class VoicePanelView(discord.ui.View):
         )
 
     # -------------------------------------------------- ligne 2
-    @discord.ui.button(label="Expulser", emoji="\U0001f462", row=1,
+    @discord.ui.button(label="Expulser", row=1,
                        style=discord.ButtonStyle.danger, custom_id="voice:kick")
     async def kick(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._owner_check(interaction):
@@ -8184,7 +8184,7 @@ class VoicePanelView(discord.ui.View):
             ephemeral=True,
         )
 
-    @discord.ui.button(label="Autoriser", emoji="\u2795", row=1,
+    @discord.ui.button(label="Autoriser", row=1,
                        style=discord.ButtonStyle.success, custom_id="voice:allow")
     async def allow(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._owner_check(interaction):
@@ -8213,7 +8213,7 @@ class VoicePanelView(discord.ui.View):
             ephemeral=True,
         )
 
-    @discord.ui.button(label="Transférer", emoji="\U0001f451", row=1,
+    @discord.ui.button(label="Transférer", row=1,
                        style=discord.ButtonStyle.secondary, custom_id="voice:transfer")
     async def transfer(self, interaction: discord.Interaction, button: discord.ui.Button):
         if not await self._owner_check(interaction):
@@ -8225,7 +8225,7 @@ class VoicePanelView(discord.ui.View):
             ephemeral=True,
         )
 
-    @discord.ui.button(label="Réclamer", emoji="\U0001f64b", row=1,
+    @discord.ui.button(label="Réclamer", row=1,
                        style=discord.ButtonStyle.success, custom_id="voice:claim")
     async def claim(self, interaction: discord.Interaction, button: discord.ui.Button):
         bot = interaction.client
@@ -8277,18 +8277,18 @@ class TempVoice(commands.Cog):
 
     def panel_embed(self, owner: discord.Member) -> discord.Embed:
         e = h.base_embed(
-            "\U0001f39b\ufe0f Panneau de contrôle",
+            " Panneau de contrôle",
             (
                 f"Salon de {owner.mention}. Tu es le seul à pouvoir utiliser ces "
                 f"boutons (le staff aussi).\n\n"
-                f"\u270f\ufe0f **Renommer** — change le nom du salon\n"
-                f"\U0001f465 **Limite** — nombre maximum de membres\n"
-                f"\U0001f512 **Verrouiller** — empêche les nouvelles arrivées\n"
-                f"\U0001f441\ufe0f **Masquer** — rend le salon invisible\n"
-                f"\U0001f462 **Expulser** — vire quelqu'un du salon\n"
-                f"\u2795 **Autoriser** — laisse entrer quelqu'un malgré le verrou\n"
-                f"\U0001f451 **Transférer** — donne le salon à un autre\n"
-                f"\U0001f64b **Réclamer** — si le propriétaire est parti\n\n"
+                f"**Renommer** — change le nom du salon\n"
+                f" **Limite** — nombre maximum de membres\n"
+                f" **Verrouiller** — empêche les nouvelles arrivées\n"
+                f" **Masquer** — rend le salon invisible\n"
+                f" **Expulser** — vire quelqu'un du salon\n"
+                f"**Autoriser** — laisse entrer quelqu'un malgré le verrou\n"
+                f" **Transférer** — donne le salon à un autre\n"
+                f" **Réclamer** — si le propriétaire est parti\n\n"
                 f"*Le salon se supprime tout seul quand il se vide.*"
             ),
         )
@@ -8393,7 +8393,7 @@ class TempVoice(commands.Cog):
         actifs = await self.bot.db.all_temp_voice(ctx.guild.id)
 
         nom_cat = cat.name if cat else "celle du salon d'accueil"
-        e = h.base_embed("\U0001f39b\ufe0f Salons vocaux temporaires")
+        e = h.base_embed("Salons vocaux temporaires")
         e.description = (
             f"**Salon d'accueil :** {hub.mention if hub else '*non configuré*'}\n"
             f"**Catégorie :** {nom_cat}\n"
@@ -8758,7 +8758,7 @@ class Scheduler(commands.Cog):
             try:
                 await channel.send(
                     embed=h.base_embed(
-                        f"{config.EMOJI['clock']} Libération automatique",
+                        "Libération automatique",
                         text,
                         config.COLOR_SUCCESS,
                     )
@@ -8803,14 +8803,14 @@ class Scheduler(commands.Cog):
 
 
 CATEGORY_META = {
-    "Moderation": (config.EMOJI["hammer"], "Bans, mutes, avertissements, purges, verrouillages"),
-    "AntiRaid": (config.EMOJI["shield"], "Détection de raids, automod, anti-nuke"),
-    "Tickets": (config.EMOJI["ticket"], "Salons d'assistance privés"),
-    "Welcome": (config.EMOJI["wave"], "Messages d'arrivée et de départ, rôle auto"),
-    "Stats": (config.EMOJI["chart"], "Profils, classements, infos serveur"),
-    "Fun": ("\U0001f3b2", "Jeux, réclamations, sondages, rappels"),
-    "Utility": ("\U0001f527", "Aide, ping, configuration, diagnostics"),
-    "Scheduler": ("\u23f1\ufe0f", "Tâches de fond (aucune commande)"),
+    "Moderation": ("", "Bans, mutes, avertissements, purges, verrouillages"),
+    "AntiRaid": ("", "Détection de raids, automod, anti-nuke"),
+    "Tickets": ("", "Salons d'assistance privés"),
+    "Welcome": ("", "Messages d'arrivée et de départ, rôle auto"),
+    "Stats": ("", "Profils, classements, infos serveur"),
+    "Fun": ("", "Jeux, réclamations, sondages, rappels"),
+    "Utility": ("", "Aide, ping, configuration, diagnostics"),
+    "Scheduler": ("", "Tâches de fond (aucune commande)"),
 }
 
 
@@ -8819,14 +8819,14 @@ class HelpSelect(discord.ui.Select):
         self.bot = bot
         self.ctx = ctx
         options = [
-            discord.SelectOption(label="Vue d'ensemble", emoji="\U0001f3e0", value="__home__")
+            discord.SelectOption(label="Vue d'ensemble", value="__home__")
         ]
         for name, cog in bot.cogs.items():
             if not cog.get_commands():
                 continue
-            emoji, desc = CATEGORY_META.get(name, ("\U0001f4c1", "Commandes"))
+            emoji, desc = CATEGORY_META.get(name, ("", "Commandes"))
             options.append(
-                discord.SelectOption(label=name, emoji=emoji, description=desc[:90],
+                discord.SelectOption(label=name, description=desc[:90],
                                      value=name)
             )
         super().__init__(placeholder="Parcourir une catégorie...", options=options[:25])
@@ -8873,7 +8873,7 @@ class Utility(commands.Cog):
             cmds = cog.get_commands()
             if not cmds:
                 continue
-            emoji, desc = CATEGORY_META.get(name, ("\U0001f4c1", ""))
+            emoji, desc = CATEGORY_META.get(name, ("", ""))
             e.add_field(
                 name=f"{emoji} {name} — {len(cmds)}",
                 value=desc or (cog.__doc__ or "").strip()[:80],
@@ -8886,7 +8886,7 @@ class Utility(commands.Cog):
         return e
 
     def cog_embed(self, ctx, cog) -> discord.Embed:
-        emoji, desc = CATEGORY_META.get(cog.qualified_name, ("\U0001f4c1", ""))
+        emoji, desc = CATEGORY_META.get(cog.qualified_name, ("", ""))
         e = h.base_embed(f"{emoji} {cog.qualified_name}", desc)
         for cmd in sorted(cog.get_commands(), key=lambda c: c.name):
             sig = f"{ctx.prefix}{cmd.qualified_name} {cmd.signature}".strip()
@@ -8966,7 +8966,7 @@ class Utility(commands.Cog):
         color = (config.COLOR_SUCCESS if ws < 150 else
                  config.COLOR_WARN if ws < 400 else config.COLOR_ERROR)
         e = h.base_embed(
-            "\U0001f3d3 Pong",
+            " Pong",
             f"**Passerelle :** {ws:.0f}ms\n"
             f"**Aller-retour :** {rtt:.0f}ms\n"
             f"**Base de données :** {db_ms:.1f}ms",
@@ -8996,7 +8996,7 @@ class Utility(commands.Cog):
     async def setup_cmd(self, ctx):
         p = ctx.prefix
         e = h.base_embed(
-            "\U0001f527 Liste de configuration",
+            " Liste de configuration",
             "À lancer dans l'ordre. Chaque étape est indépendante — saute ce que tu ne veux pas.",
         )
         e.add_field(
@@ -9071,9 +9071,9 @@ class Utility(commands.Cog):
             color=config.COLOR_SUCCESS if not bad else config.COLOR_WARN,
         )
         if bad:
-            e.add_field(name=f"{config.EMOJI['no']} Manquantes",
+            e.add_field(name="Manquantes",
                         value="\n".join(bad)[:1000], inline=False)
-        e.add_field(name=f"{config.EMOJI['ok']} Présentes ({len(good)})",
+        e.add_field(name=f"Présentes ({len(good)})",
                     value="\n".join(good)[:1000] or "aucune", inline=False)
         role_pos = ctx.guild.me.top_role.position
         highest = max(r.position for r in ctx.guild.roles)
@@ -9158,7 +9158,6 @@ def construire_options(guild: discord.Guild, rows, multiple: bool):
                 label="Retirer mon rôle",
                 value="__none__",
                 description="Enlève le ou les rôles pris ici",
-                emoji="\u274c",
             )
         )
     return options
@@ -9303,7 +9302,7 @@ class SelfRoles(commands.Cog):
     @commands.command(
         name="addrolecs",
         aliases=["addrolec", "addselfrole", "ajouterrolec"],
-        help='-addrolecS "nom du role" [emoji] [description] — ajoute un rôle au menu.',
+        help='+addrolecS "nom du role" [emoji] [description] — ajoute un rôle au menu.',
     )
     @commands.guild_only()
     @h.is_owner_or(manage_roles=True)
@@ -9364,7 +9363,7 @@ class SelfRoles(commands.Cog):
     @commands.command(
         name="delrolecs",
         aliases=["removerolecs", "delrolec", "delselfrole"],
-        help='-delrolecS "nom du role" — retire un rôle du menu.',
+        help='+delrolecS "nom du role" — retire un rôle du menu.',
     )
     @commands.guild_only()
     @h.is_owner_or(manage_roles=True)
